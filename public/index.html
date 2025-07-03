@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>C Compiler Visualizer</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1e1e2f;
+      color: #f1f1f1;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px;
+      font-size: 32px;
+      color: #c77dff;
+      text-shadow: 0 0 10px #c77dff;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .code-section, .tokens-section, .ast-section {
+      border: 2px solid #80ffdb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      background-color: #2b2b3c;
+      box-shadow: 0 0 10px #80ffdb88;
+    }
+
+    .code-section textarea {
+      width: 100%;
+      height: 200px;
+      background-color: #141414;
+      color: #80ffdb;
+      font-size: 14px;
+      border: 1px solid #c77dff;
+      border-radius: 10px;
+      padding: 10px;
+      resize: vertical;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 15px;
+    }
+
+    button {
+      background-color: #c77dff;
+      border: none;
+      border-radius: 25px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      color: #1e1e2f;
+      cursor: pointer;
+      box-shadow: 0 0 15px #c77dff88;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #a64fff;
+      transform: scale(1.05);
+    }
+
+    .tokens-section h2, .ast-section h2, .code-section h2 {
+      margin-top: 0;
+      color: #80ffdb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background-color: #1e1e2f;
+    }
+
+    th, td {
+      border: 1px solid #80ffdb;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #2b2b3c;
+      color: #c77dff;
+    }
+
+    td {
+      color: #f1f1f1;
+    }
+
+    #output, #tacOutput {
+      margin-top: 10px;
+      background-color: #141414;
+      color: #f1f1f1;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #80ffdb;
+      font-size: 14px;
+    }
+
+    #output {
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    #tacOutput {
+      white-space: pre;
+      line-height: 1.5;
+    }
+
+    #errorOutput {
+      color: #ff6b6b;
+      padding-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🖥️ C Compiler Visualizer</h1>
+
+  <div class="container">
+
+    <div class="code-section">
+      <h2>Your C Code</h2>
+      <textarea id="codeInput">// Try: for, while, do-while, break, continue, switch-case here</textarea>
+      <div class="buttons">
+        <button onclick="handleTokenize()">Tokenize</button>
+        <button onclick="handleParse()">Parse</button>
+      </div>
+      <div id="errorOutput"></div>
+    </div>
+
+    <div class="tokens-section">
+      <h2>Tokens</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Token Type</th>
+            <th>Lexeme</th>
+          </tr>
+        </thead>
+        <tbody id="tokenTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="ast-section">
+      <h2>Abstract Syntax Tree</h2>
+      <div id="output"></div>
+    </div>
+
+    <div class="ast-section">
+      <h2>Three Address Code</h2>
+      <div id="tacOutput"></div>
+    </div>
+
+  </div>
+
+  <!-- Logic files -->
+  <script src="lexer.js"></script>
+  <script src="parser.js"></script>
+  <script src="intermediate.js"></script>
+
+  <script>
+    function handleTokenize() {
+      const code = document.getElementById('codeInput').value;
+      const tokens = tokenize(code);
+
+      const tableBody = document.getElementById('tokenTableBody');
+      tableBody.innerHTML = '';
+      tokens.forEach(token => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${token.type}</td><td>${token.value}</td>`;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function handleParse() {
+      const code = document.getElementById('codeInput').value;
+      const tokens = tokenize(code);
+      const ast = parse(tokens);
+
+      document.getElementById('errorOutput').textContent = "";
+      document.getElementById('output').textContent = "";
+      document.getElementById('tacOutput').textContent = "";
+
+      try {
+        document.getElementById('output').textContent = JSON.stringify(ast, null, 2);
+
+        const tac = generateTAC(ast);
+        document.getElementById('tacOutput').textContent = tac.join('\n');
+      } catch (error) {
+        document.getElementById('errorOutput').textContent = "Error: " + error.message;
+      }
+    }
+  </script>
+
+</body>
+</html>
